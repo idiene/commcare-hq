@@ -1094,7 +1094,7 @@ class ProjectUsersTab(UITab):
                 }
             ]))
 
-        if self.project.locations_enabled:
+        if has_privilege(self._request, privileges.LOCATIONS):
             from corehq.apps.locations.views import (
                 LocationsListView,
                 NewLocationView,

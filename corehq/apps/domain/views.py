@@ -141,7 +141,7 @@ def select(request, domain_select_template='domain/select.html', do_not_redirect
                 return dashboard_default(request, last_visited_domain)
             except Http404:
                 pass
-            
+
         del request.session['last_visited_domain']
         return render(request, domain_select_template, additional_context)
 

@@ -18,7 +18,7 @@ from corehq.apps.users.util import raw_username, user_display_string
 
 from .models import Location
 from .signals import location_created, location_edited
-from .util import load_locs_json, allowed_child_types, lookup_by_property
+from .util import allowed_child_types, lookup_by_property
 
 
 class ParentLocWidget(forms.Widget):
@@ -69,6 +69,7 @@ class LocationForm(forms.Form):
     external_id.widget.attrs['readonly'] = True
 
     strict = True  # optimization hack: strict or loose validation
+    # TODO remove user from parameters once all these branches are merged
 
     def __init__(self, location, bound_data=None, is_new=False, user=None,
                  *args, **kwargs):
