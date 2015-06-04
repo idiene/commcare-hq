@@ -520,11 +520,14 @@ class HQMediaMixin(Document):
         self.media_form_errors = False
 
         def _add_menu_media(item, **kwargs):
-            media.extend([ApplicationMediaReference(image,
-                                                    media_class=CommCareImage,
-                                                    is_menu_media=True, **kwargs)
-                          for image in item.all_image_paths()
-                          if image])
+            if item.media_image:
+                media.append(ApplicationMediaReference(item.media_image,
+                                                       media_class=CommCareImage,
+                                                       is_menu_media=True, **kwargs))
+            if item.media_audio:
+                media.append(ApplicationMediaReference(item.media_audio,
+                                                       media_class=CommCareAudio,
+                                                       is_menu_media=True, **kwargs))
 
             media.extend([ApplicationMediaReference(audio,
                                                     media_class=CommCareAudio,
@@ -546,13 +549,8 @@ class HQMediaMixin(Document):
                               for audio_path in module.case_list_form.all_audio_paths()
                               if audio_path])
 
-                media.extend([ApplicationMediaReference(image_path,
-                                                        media_class=CommCareImage,
-                                                        **media_kwargs)
-                              for image_path in module.case_list_form.all_image_paths()
-                              if image_path])
-
-            if module.case_list.show:
+            # Not all modules use case lists (e.g., reporting modules)
+            if hasattr(module, 'case_list') and module.case_list.show:
                 media.append(ApplicationMediaReference(
                     module.case_list.media_audio,
                     media_class=CommCareAudio,
@@ -607,7 +605,8 @@ class HQMediaMixin(Document):
         return self._get_item_media(module.case_list_form, media_kwargs)
 
     def get_case_list_menu_item_media(self, module, module_index, to_language=None):
-        if not module:
+        # Not all modules use case lists (e.g., reporting modules)
+        if not module or not hasattr(module, 'case_list'):
             # user_registration isn't a real module, for instance
             return {}
         media_kwargs = self.get_media_ref_kwargs(module, module_index)
