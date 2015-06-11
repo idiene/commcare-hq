@@ -5,7 +5,7 @@ import urllib
 from django.utils.decorators import method_decorator
 from django.views.decorators.debug import sensitive_post_parameters
 from djangular.views.mixins import allow_remote_invocation, JSONResponseMixin
-from corehq import Domain, privileges, toggles
+from corehq import Domain
 from corehq.apps.accounting.utils import domain_has_privilege
 from corehq.apps.domain.views import BaseDomainView
 from corehq.apps.sms.mixin import BadSMSConfigException
@@ -358,6 +358,7 @@ class EditMyAccountDomainView(BaseFullEditUserView):
 
     @property
     def page_context(self):
+        from corehq import privileges
         context = {
             'can_use_inbound_sms': domain_has_privilege(self.domain, privileges.INBOUND_SMS),
         }
@@ -488,6 +489,7 @@ class NewListWebUsersView(JSONResponseMixin, BaseUserSettingsView):
 
     @property
     def can_edit_roles(self):
+        from corehq import privileges
         try:
             ensure_request_has_privilege(self.request, privileges.ROLE_BASED_ACCESS)
         except PermissionDenied:
@@ -563,6 +565,7 @@ class ListWebUsersView(BaseUserSettingsView):
 
     @property
     def can_edit_roles(self):
+        from corehq import privileges
         try:
             ensure_request_has_privilege(self.request, privileges.ROLE_BASED_ACCESS)
         except PermissionDenied:
@@ -600,6 +603,7 @@ class ListWebUsersView(BaseUserSettingsView):
 
 
 def get_web_user_list_view(request):
+    from corehq import toggles
     if toggles.PAGINATE_WEB_USERS.enabled(request.domain):
         return NewListWebUsersView
     return ListWebUsersView
@@ -641,6 +645,7 @@ def undo_remove_web_user(request, domain, record_id):
 @domain_admin_required
 @require_POST
 def post_user_role(request, domain):
+    from corehq import privileges
     if not domain_has_privilege(domain, privileges.ROLE_BASED_ACCESS):
         return json_response({})
     role_data = json.loads(request.body)
@@ -660,6 +665,7 @@ def post_user_role(request, domain):
 @domain_admin_required
 @require_POST
 def delete_user_role(request, domain):
+    from corehq import privileges
     if not domain_has_privilege(domain, privileges.ROLE_BASED_ACCESS):
         return json_response({})
     role_data = json.loads(request.body)
@@ -951,6 +957,7 @@ def audit_logs(request, domain):
 @domain_admin_required
 @require_POST
 def location_restriction_for_users(request, domain):
+    from corehq import toggles
     if not toggles.RESTRICT_WEB_USERS_BY_LOCATION.enabled(request.domain):
         raise Http403()
     project = Domain.get_by_name(domain)
