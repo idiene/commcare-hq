@@ -993,8 +993,7 @@ class CreditsStripePaymentView(BaseStripePaymentView):
             self.domain,
             self.account,
             subscription=Subscription.get_subscribed_plan_by_domain(self.domain_object)[1],
-            product_type=self.request.POST.get('product'),
-            feature_type=self.request.POST.get('feature'),
+            post_data=self.request.POST.copy(),
         )
 
 

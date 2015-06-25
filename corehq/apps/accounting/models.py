@@ -800,8 +800,17 @@ class Subscriber(models.Model):
             }
             sub_change_email_address = (settings.INTERNAL_SUBSCRIPTION_CHANGE_EMAIL
                                         if internal_change else settings.SUBSCRIPTION_CHANGE_EMAIL)
+            env = ("[{}] ".format(settings.SERVER_ENVIRONMENT.upper())
+                   if settings.SERVER_ENVIRONMENT == "staging" else "")
+            email_subject = "{env}Subscription Change Alert: {domain} from {old_plan} to {new_plan}".format(
+                env=env,
+                domain=email_context['domain'],
+                old_plan=email_context['old_plan'],
+                new_plan=email_context['new_plan'],
+            )
+
             send_HTML_email(
-                "Subscription Change Alert: %(domain)s from %(old_plan)s to %(new_plan)s" % email_context,
+                email_subject,
                 sub_change_email_address,
                 render_to_string('accounting/subscription_change_email.html', email_context),
                 text_content=render_to_string('accounting/subscription_change_email.txt', email_context),
@@ -865,7 +874,7 @@ class Subscription(models.Model):
         try:
             Domain.get_by_name(self.subscriber.domain).save()
         except Exception as e:
-            # If a subscriber doesn't have a valid domain associated with it 
+            # If a subscriber doesn't have a valid domain associated with it
             # we don't care the pillow won't be updated
             pass
 
@@ -1290,7 +1299,7 @@ class Subscription(models.Model):
         if plan_version is None:
             plan_version = DefaultProductPlan.get_default_plan_by_domain(domain)
         return plan_version, subscription
-    
+
     @classmethod
     def new_domain_subscription(cls, account, domain, plan_version,
                                 date_start=None, date_end=None, note=None,
@@ -1790,10 +1799,7 @@ class BillingRecord(BillingRecordBase):
         ))
         is_small_invoice = self.invoice.balance <= SMALL_INVOICE_THRESHOLD
         context.update({
-            'plan_name': "%(product)s %(name)s" % {
-                'product': self.invoice.subscription.plan_version.core_product,
-                'name': self.invoice.subscription.plan_version.plan.edition,
-            },
+            'plan_name': self.invoice.subscription.plan_version.plan.name,
             'date_due': self.invoice.date_due,
             'is_small_invoice': is_small_invoice,
             'total_balance': total_balance,
